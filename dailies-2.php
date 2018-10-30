@@ -2,7 +2,7 @@
 /*
 Plugin Name: The Dailies
 Plugin URI:  https://dailies.gg/
-Description: Handles all the additional functionality needed to run The Dailies.
+Description: Handles all the additional functionality needed to run The Dailies
 Version:     2.0
 Author:      Alec Simone
 License:     Do whatever the hell you want with it, it's mostly pretty shit code
