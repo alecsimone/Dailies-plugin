@@ -25,8 +25,4 @@ function pull_clips() {
 	update_option( "cron-test", $currentCronCount + 1 );
 }
 
-// wp_clear_scheduled_hook('pull_clips');
-// $a = _get_cron_array();
-// basicPrint($a);
-
 ?>
