@@ -26,5 +26,6 @@ require_once( __DIR__ . '/Voting/voting.php');
 //Rules
 
 require_once( __DIR__ . '/rest-endpoints.php');
+require_once( __DIR__ . '/crons.php');
 
 ?>
