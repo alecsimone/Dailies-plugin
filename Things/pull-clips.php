@@ -1,6 +1,7 @@
 <?php
 
 function pull_all_clips() {
+	update_option("cron-test", 696969);
 	pull_twitter_mentions();
 }
 

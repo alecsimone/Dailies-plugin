@@ -17,6 +17,7 @@ require_once( __DIR__ . '/People/people.php');
 
 //Things
 require_once( __DIR__ . '/Things/thing-databases-setup.php');
+require_once( __DIR__ . '/Things/thing-management.php');
 require_once( __DIR__ . '/Things/submissions.php');
 require_once( __DIR__ . '/Things/pull-clips.php');
 require_once( __DIR__ . '/Things/hopefuls.php');
