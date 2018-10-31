@@ -9,7 +9,7 @@ function submitClipAjaxHandler () {
 	killAjaxFunction($submission);
 }
 
-function submitClip ($newSeedlingTitle, $newSeedlingUrl, $submitter) {
+function submitClip($newSeedlingTitle, $newSeedlingUrl, $submitter) {
 	$clipType = clipTypeDetector($newSeedlingUrl);
 
 	if ($clipType === 'twitch') {
@@ -197,6 +197,25 @@ function gussyGfy($gfyCode) {
 	} else {
 		return false;
 	}
+}
+
+function submitTweet($tweetData) {
+	$tweeter = $tweetData->user->screen_name;
+	$fullTweet = sanitize_text_field($tweetData->text);
+	$tweetWords = explode(" ", $fullTweet);
+	$tweet = "";
+	foreach ($tweetWords as $key => $word) {
+		if (strpos($word, "@") === false && strpos($word, "http") === false) {
+			$tweet .= " " . $word . " ";
+		}
+	}
+	if ($tweet === "") {
+		$tweet = $tweeter . " Twitter Mention";
+	}
+	$tweetID = $tweetData->id_str;
+	$tweetURL = "https://twitter.com/" . $tweeter . "/status/" . $tweetID;
+	$submission = submitClip($tweet, $tweetURL, $tweeter);
+	return $submission;
 }
 
 add_action( 'wp_ajax_addProspect', 'addProspect' );

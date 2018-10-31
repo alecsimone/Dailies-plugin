@@ -22,24 +22,10 @@ function pull_twitter_mentions() {
 	$response = wp_remote_get($url, $args);
 	$responseBody = json_decode($response['body']);
 
-	foreach ($responseBody as $key => $value) {
+	foreach ($responseBody as $key => $tweetData) {
 		// basicPrint($key);
-		if ( tweetIsProbablySubmission($value) ) {
-			$tweeter = $value->user->screen_name;
-			$fullTweet = sanitize_text_field($value->text);
-			$tweetWords = explode(" ", $fullTweet);
-			$tweet = "";
-			foreach ($tweetWords as $key => $word) {
-				if (strpos($word, "@") === false && strpos($word, "http") === false) {
-					$tweet .= " " . $word . " ";
-				}
-			}
-			if ($tweet === "") {
-				$tweet = $tweeter . " Twitter Mention";
-			}
-			$tweetID = $value->id_str;
-			$tweetURL = "https://twitter.com/" . $tweeter . "/status/" . $tweetID;
-			$submission = submitClip($tweet, $tweetURL, $tweeter);
+		if ( tweetIsProbablySubmission($tweetData) ) {
+			$submission = submitTweet($tweetData);
 		}
 		// basicPrint("------------------------------------");
 	};
