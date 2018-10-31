@@ -226,10 +226,10 @@ function submitTweet($tweetData) {
 			}
 		}
 	}
-	basicPrint($tweeter);
-	basicPrint($tweet);
-	basicPrint($submissionURL);
-	// $submission = submitClip($tweet, $submissionURL, $tweeter);
+	// basicPrint($tweeter);
+	// basicPrint($tweet);
+	// basicPrint($submissionURL);
+	$submission = submitClip($tweet, $submissionURL, $tweeter);
 	return $submission;
 }
 

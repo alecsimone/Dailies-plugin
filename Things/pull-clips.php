@@ -23,8 +23,9 @@ function pull_twitter_mentions() {
 	$responseBody = json_decode($response['body']);
 
 	foreach ($responseBody as $key => $tweetData) {
-		basicPrint($key);
-		
+	// basicPrint($key);
+		$tweetURL = "https://twitter.com/" . $tweetData->user->screen_name . "/status/" . $tweetData->id_str;
+	// basicPrint($tweetURL);
 		if ($tweetData->in_reply_to_status_id_str) {
 			$parentTweet = getTweet($tweetData->in_reply_to_status_id_str);
 			if ($parentTweet->user->screen_name === "Rocket_Dailies") {continue;}
@@ -32,10 +33,25 @@ function pull_twitter_mentions() {
 				$submission = submitTweet($parentTweet);
 			}
 		}
+
+		if ($tweetData->entities->urls) {
+			foreach ($tweetData->entities->urls as $urlArray) {
+				if (!strpos($urlArray->expanded_url, 'twitter.com/i/') && strpos($urlArray->expanded_url, '/status/') >= 0) {
+					$linkedTweetID = turnURLIntoTwitterCode($urlArray->expanded_url);
+					$linkedTweet = getTweet($linkedTweetID);
+					if ($linkedTweet->user->screen_name === "Rocket_Dailies") {continue;}
+					if ( tweetIsProbablySubmission($linkedTweet) ) {
+						$submission = submitTweet($linkedTweet);
+					}
+				}
+			}
+		}
+
 		if ( tweetIsProbablySubmission($tweetData) ) {
 			$submission = submitTweet($tweetData);
 		}
-		basicPrint("------------------------------------");
+
+	// basicPrint("------------------------------------");
 	};
 }
 
