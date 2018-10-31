@@ -23,6 +23,5 @@ add_action( 'pull_clips', 'pull_clips_cron_handler' );
 function pull_clips_cron_handler() {
 	pull_all_clips();
 }
-add_action("init", "pull_clips_cron_handler");
 
 ?>

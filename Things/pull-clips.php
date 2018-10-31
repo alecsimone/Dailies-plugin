@@ -11,26 +11,7 @@ function pull_twitch_clips() {
 function pull_twitter_mentions() {
 	$url = 'https://api.twitter.com/1.1/statuses/mentions_timeline.json';
 
-	global $privateData;
-
-	$OAuth = array(
-		urlencode("oauth_consumer_key") => $privateData['twitterConsumerKey'],
-		urlencode("oauth_nonce") => generateString(),
-		urlencode("oauth_signature_method") => "HMAC-SHA1",
-		urlencode("oauth_timestamp") => time(),
-		urlencode("oauth_token") => $privateData['twitterAccessToken'],
-		urlencode("oauth_version") => "1.0",
-	);
-	
-	$signature = createTwitterOauthSignature($url, $OAuth, 'get');
-	$OAuth['oauth_signature'] = $signature;
-	ksort($OAuth);
-
-	$authorization = "OAuth ";
-	foreach ($OAuth as $key => $value) {
-		$authorization .= urlencode($key) . '="' . urlencode($value) . '", ';
-	}
-	$authorization = substr($authorization, 0, strlen($authorization) - 2);
+	$authorization = generateTwitterAuthorization($url, "get");
 
 	$args = array(
 		"headers" => array(
@@ -42,13 +23,65 @@ function pull_twitter_mentions() {
 	$responseBody = json_decode($response['body']);
 
 	foreach ($responseBody as $key => $value) {
-		basicPrint($key);
-		basicPrint($value);
-	}
+		// basicPrint($key);
+		if ( tweetIsProbablySubmission($value) ) {
+			$tweeter = $value->user->screen_name;
+			$fullTweet = sanitize_text_field($value->text);
+			$tweetWords = explode(" ", $fullTweet);
+			$tweet = "";
+			foreach ($tweetWords as $key => $word) {
+				if (strpos($word, "@") === false && strpos($word, "http") === false) {
+					$tweet .= " " . $word . " ";
+				}
+			}
+			if ($tweet === "") {
+				$tweet = $tweeter . " Twitter Mention";
+			}
+			$tweetID = $value->id_str;
+			$tweetURL = "https://twitter.com/" . $tweeter . "/status/" . $tweetID;
+			$submission = submitClip($tweet, $tweetURL, $tweeter);
+		}
+		// basicPrint("------------------------------------");
+	};
 }
 
 function pull_twitter_timeline($timeline) {
 
+}
+
+function tweetIsProbablySubmission($tweetData) {
+	$entities = $tweetData->entities;
+	if ($entities->media) {
+		return true;
+	}
+	if ($entities->urls) {
+		// basicPrint("URLS");
+		// basicPrint($entities->urls);
+	}
+}
+
+function generateTwitterAuthorization($url, $method) {
+	global $privateData;
+	$OAuth = array(
+		urlencode("oauth_consumer_key") => $privateData['twitterConsumerKey'],
+		urlencode("oauth_nonce") => generateString(),
+		urlencode("oauth_signature_method") => "HMAC-SHA1",
+		urlencode("oauth_timestamp") => time(),
+		urlencode("oauth_token") => $privateData['twitterAccessToken'],
+		urlencode("oauth_version") => "1.0",
+	);
+	
+	$signature = createTwitterOauthSignature($url, $OAuth, $method);
+	$OAuth['oauth_signature'] = $signature;
+	ksort($OAuth);
+
+	$authorization = "OAuth ";
+	foreach ($OAuth as $key => $value) {
+		$authorization .= urlencode($key) . '="' . urlencode($value) . '", ';
+	}
+	$authorization = substr($authorization, 0, strlen($authorization) - 2);
+
+	return $authorization;
 }
 
 function createTwitterOauthSignature($url, $OAuth, $method) {
