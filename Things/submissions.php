@@ -201,7 +201,11 @@ function gussyGfy($gfyCode) {
 
 function submitTweet($tweetData) {
 	$tweeter = $tweetData->user->screen_name;
-	$fullTweet = sanitize_text_field($tweetData->text);
+	if ($tweetData->text) {
+		$fullTweet = sanitize_text_field($tweetData->text);
+	} elseif ($tweetData->full_text) {
+		$fullTweet = sanitize_text_field($tweetData->full_text);
+	}
 	$tweetWords = explode(" ", $fullTweet);
 	$tweet = "";
 	foreach ($tweetWords as $key => $word) {
@@ -213,8 +217,19 @@ function submitTweet($tweetData) {
 		$tweet = $tweeter . " Twitter Mention";
 	}
 	$tweetID = $tweetData->id_str;
-	$tweetURL = "https://twitter.com/" . $tweeter . "/status/" . $tweetID;
-	$submission = submitClip($tweet, $tweetURL, $tweeter);
+	if ($tweetData->entities->media) {
+		$submissionURL = "https://twitter.com/" . $tweeter . "/status/" . $tweetID;
+	} elseif ($tweetData->entities->urls) {
+		foreach ($tweetData->entities->urls as $urlArray) {
+			if (strpos($urlArray->expanded_url, "clips.twitch.tv") || strpos($urlArray->expanded_url, "gfycat.com") || strpos($urlArray->expanded_url, "youtube.com") ||strpos($urlArray->expanded_url, "youtu.be")) {
+				$submissionURL = $urlArray->expanded_url;
+			}
+		}
+	}
+	basicPrint($tweeter);
+	basicPrint($tweet);
+	basicPrint($submissionURL);
+	// $submission = submitClip($tweet, $submissionURL, $tweeter);
 	return $submission;
 }
 

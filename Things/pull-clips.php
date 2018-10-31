@@ -23,11 +23,19 @@ function pull_twitter_mentions() {
 	$responseBody = json_decode($response['body']);
 
 	foreach ($responseBody as $key => $tweetData) {
-		// basicPrint($key);
+		basicPrint($key);
+		
+		if ($tweetData->in_reply_to_status_id_str) {
+			$parentTweet = getTweet($tweetData->in_reply_to_status_id_str);
+			if ($parentTweet->user->screen_name === "Rocket_Dailies") {continue;}
+			if ( tweetIsProbablySubmission($parentTweet) ) {
+				$submission = submitTweet($parentTweet);
+			}
+		}
 		if ( tweetIsProbablySubmission($tweetData) ) {
 			$submission = submitTweet($tweetData);
 		}
-		// basicPrint("------------------------------------");
+		basicPrint("------------------------------------");
 	};
 }
 
@@ -41,8 +49,11 @@ function tweetIsProbablySubmission($tweetData) {
 		return true;
 	}
 	if ($entities->urls) {
-		// basicPrint("URLS");
-		// basicPrint($entities->urls);
+		foreach ($entities->urls as $urlArray) {
+			if (strpos($urlArray->expanded_url, "clips.twitch.tv") || strpos($urlArray->expanded_url, "gfycat.com") || strpos($urlArray->expanded_url, "youtube.com") ||strpos($urlArray->expanded_url, "youtu.be")) {
+				return true;
+			}
+		}
 	}
 }
 
