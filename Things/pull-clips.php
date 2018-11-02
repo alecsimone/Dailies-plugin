@@ -1,12 +1,131 @@
 <?php
-
 function pull_all_clips() {
-	update_option("cron-test", 696969);
 	pull_twitter_mentions();
+	pull_twitch_clips();
+	update_option("lastClipUpdateTime", time());
+}
+
+function getQueryPeriod() {
+	$lastUpdateTime = get_option("lastClipUpdateTime");
+	if (!$lastUpdateTime) {
+		$weedPageID = getPageIDBySlug('weed');
+		$lastUpdateTime = get_post_meta($weedPageID, 'lastClipTime', true);
+	}
+	$currentTime = time();
+	$queryLength = $currentTime - $lastUpdateTime;
+	if ($queryLength >= 60 * 60 * 24) {
+		return "week";
+	} else {
+		return "day";
+	}
 }
 
 function pull_twitch_clips() {
+	$queryPeriod = getQueryPeriod();
+	$clipsArray = get_twitch_clips("game=Rocket%20League", $queryPeriod)->clips;
+	$tournamentsArray = generateTodaysStreamlist();
+	foreach ($tournamentsArray as $streamName) {
+		if ($streamName === "Rocket_Dailies") {continue;}
+		$target = "channel=" . $streamName;
+		$theseClips = get_twitch_clips($target, $queryPeriod);
+		$clipsArray = array_merge($clipsArray, $theseClips->clips);
+	}
+	$existingClipData = getCleanPulledClipsDB();
+	foreach ($clipsArray as $key => $clipData) {
+		if ($clipData->game !== "Rocket League") {
+			unset($clipsArray[$key]);
+			continue;
+		}
+		if ((int)$clipData->views < 3) {
+			unset($clipsArray[$key]);
+			continue;
+		}
+		if ((int)$existingClipData[$clipData->slug]['nuked'] === 1) {
+			unset($clipsArray[$key]);
+			continue;
+		}
+		if ($clipData->vod) {
+			$vodlink = $clipData->vod->url;
+		} else {
+			$vodlink = "none";
+		}
+		if ($clipData->thumbnails) {
+			$thumb = $clipData->thumbnails->medium;
+		} else {
+			$thumb = null;
+		}
+		$thisClipArray = array(
+			'slug' => $clipData->slug,
+			'title' => $clipData->title,
+			'views' => $clipData->views,
+			'age' => $clipData->created_at,
+			'source' => $clipData->broadcaster->display_name,
+			'sourcepic' => $clipData->broadcaster->logo,
+			'vodlink' => $vodlink,
+			'clipper' => $clipData->curator->display_name,
+			'score' => 0,
+			'votecount' => 0,
+			'thumb' => $thumb,
+			'type' => "twitch",
+		);
 
+		if ($existingClipData[$clipData->slug]!== null) {
+			$thisClipArray['score'] = $existingClipData[$clipData->slug]['score'];
+			$thisClipArray['votecount'] = $existingClipData[$clipData->slug]['votecount'];
+		}
+
+		if ($existingClipData[$clipData->slug]) {
+			editPulledClip($thisClipObject);
+			continue;
+		} else {
+			$addSlugSuccess = addSlugToDB($thisClipObject);
+			continue;
+		}
+	}
+}
+
+function generateTodaysStreamlist() {
+	include( locate_template('schedule.php') );
+
+	$todaysStreams = generateStreamListForDay($todaysSchedule);
+	$todaysIndex = array_search($todaysSchedule, $myWeekdays);
+	if ($todaysIndex === 0) {
+		$yesterdaysIndex = count($myWeekdays) - 1;
+	} else {
+		$yesterdaysIndex = $todaysIndex - 1;
+	}
+	$yesterday = $myWeekdays[$yesterdaysIndex];
+	$yesterdaysStreams = generateStreamListForDay($yesterday);
+
+	$combinedStreams = array_merge($yesterdaysStreams, $todaysStreams);
+	return $combinedStreams;
+}
+function generateStreamlistForDay($day) {
+	include( locate_template('schedule.php') );
+	$todaysChannels = $schedule[$day];
+	$streamList = array();
+	foreach ($todaysChannels as $channel) {
+		$twitchWholeURL = get_term_meta($channel[2], 'twitch', true);
+		$twitchChannel = substr($twitchWholeURL, 22);
+		$streamList[] = $twitchChannel;
+	}
+	return $streamList;
+}
+
+function get_twitch_clips($target, $queryPeriod) {
+	$url = "https://api.twitch.tv/kraken/clips/top?" . $target . "&period=" . $queryPeriod . "&limit=100";
+
+	global $privateData;
+	$args = array(
+		"headers" => array(
+			"Client-ID" => $privateData['twitchClientID'],
+			'Accept' => 'application/vnd.twitchtv.v5+json',
+		),
+	);
+
+	$response = wp_remote_get($url, $args);
+	$responseBody = json_decode($response['body']);
+	return $responseBody;
 }
 
 function pull_twitter_mentions() {
