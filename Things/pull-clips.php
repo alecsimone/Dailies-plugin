@@ -22,6 +22,7 @@ function getQueryPeriod() {
 
 function pull_twitch_clips() {
 	$queryPeriod = getQueryPeriod();
+	$cutoffTime = clipCutoffTimestamp();
 	$clipsArray = get_twitch_clips("game=Rocket%20League", $queryPeriod)->clips;
 	$tournamentsArray = generateTodaysStreamlist();
 	foreach ($tournamentsArray as $streamName) {
@@ -37,6 +38,10 @@ function pull_twitch_clips() {
 			continue;
 		}
 		if ((int)$clipData->views < 3) {
+			unset($clipsArray[$key]);
+			continue;
+		}
+		if ((int)convertTwitchTimeToTimestamp($clipData->created_at) < $cutoffTime) {
 			unset($clipsArray[$key]);
 			continue;
 		}

@@ -10,6 +10,7 @@ License:     Do whatever the hell you want with it, it's mostly pretty shit code
 
 require_once( __DIR__ . '/helpers.php');
 require_once( __DIR__ . '/privateData.php');
+require_once( __DIR__ . '/client-information.php');
 
 //People
 require_once( __DIR__ . '/People/people-databases-setup.php');
