@@ -60,6 +60,7 @@ function judge_slug() {
 	$clipArray['storeError'] = $wpdb->last_error;
 
 	nukeAllDupeSlugs($slug);
+	checkForRepIncrease($userID);
 
 	killAjaxFunction($clipArray);
 }
