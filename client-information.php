@@ -2,7 +2,7 @@
 
 add_action("wp_enqueue_scripts", "client_information");
 function client_information() {
-	$version = '-v1.924';
+	$version = '-v1.930';
 	if (is_page('weed') || is_page('1r') || is_page('scout')) {
 		wp_register_script( 'weedScripts', get_template_directory_uri() . '/Bundles/weed-bundle' . $version . '.js', ['jquery'], '', true );
 		$weedData = generateWeedData();

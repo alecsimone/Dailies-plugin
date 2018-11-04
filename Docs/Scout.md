@@ -31,9 +31,9 @@ __We are now moving to work being done client side, currently in the theme, not 
 ## Filtering ##
 Once we have all the clips, we have to filter out the bad ones
 -Remove anything that has already been nuked
+-Remove anything with a score below -50
 -Remove anything that is in this person's seenSlugs
 -Remove anything that is a similar moment to this person's seenSlugs
--Remove anything with a score below -50
 
 
 ## Sorting ##

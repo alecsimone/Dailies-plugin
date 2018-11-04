@@ -24,7 +24,7 @@ function pull_clips_cron_handler() {
 	pull_all_clips();
 }
 
-if( !wp_next_scheduled( 'clean_pull_clips_db' ) ) {
+if( !wp_next_scheduled( 'clean_pulled_clips_db' ) ) {
    wp_schedule_event( time(), 'daily', 'clean_pulled_clips_db' );
 }
 add_action( 'clean_pulled_clips_db', 'clean_pulled_clips_db_cron_handler' );
