@@ -1,10 +1,15 @@
 <?php
 
-add_action( 'wp_ajax_submitClip', 'submitClip' );
-function submitClip () {
+add_action( 'wp_ajax_submitClip', 'submitClipAjaxHandler' );
+function submitClipAjaxHandler () {
 	$newSeedlingTitle = substr(sanitize_text_field($_POST['title']), 0, 80);
 	$newSeedlingUrl = substr(esc_url($_POST['url']), 0, 140);
+	$submitter = get_user_meta(get_current_user_id(), 'nickname', true);
+	$submission = submitClip($newSeedlingTitle, $newSeedlingUrl, $submitter);
+	killAjaxFunction($submission);
+}
 
+function submitClip($newSeedlingTitle, $newSeedlingUrl, $submitter) {
 	$clipType = clipTypeDetector($newSeedlingUrl);
 
 	if ($clipType === 'twitch') {
@@ -18,12 +23,12 @@ function submitClip () {
 	} elseif ($clipType === 'gfycat') {
 		$slug = turnURLIntoGfycode($newSeedlingUrl);
 	} else {
-		killAjaxFunction("Invalid URL");
+		return "Invalid URL";
 	}
 
 	$existingSlug = getSlugInPulledClipsDB($slug);
 	if ($existingSlug !== null) {
-		killAjaxFunction("That clip has already been submitted");
+		return "That clip has already been submitted";
 	} else {
 		$clipArray = array(
 			'slug' => $slug,
@@ -34,7 +39,7 @@ function submitClip () {
 			'sourcepic' => 'unknown',
 			'vodlink' => 'none',
 			'thumb' => 'none',
-			'clipper' => get_user_meta(get_current_user_id(), 'nickname', true),
+			'clipper' => $submitter,
 			'votecount' => 0,
 			'score' => 0,
 			'nuked' => 0,
@@ -45,7 +50,7 @@ function submitClip () {
 
 	$gussyResult = gussyClip($clipType, $slug);
 
-	killAjaxFunction($addSlugSuccess);
+	return $addSlugSuccess;
 }
 
 function gussyClip($clipType, $slug) {
@@ -64,23 +69,29 @@ function gussyClip($clipType, $slug) {
 	return $gussyResult;
 }
 
-function gussyTweet($tweetID) {
+function getTweet($tweetID) {
 	$url = 'https://api.twitter.com/1.1/statuses/show.json?id=' . $tweetID . '&tweet_mode=extended';
 
 	global $privateData;
 	$args = array(
 		"headers" => array(
-			"Authorization" => $privateData['twitterAccessToken'],
+			"Authorization" => $privateData['twitterBearerToken'],
 		),
 	);
 
 	$response = wp_remote_get($url, $args);
 	$responseBody = json_decode($response['body']);
-	$date = $responseBody->created_at;
-	$sourcePic = $responseBody->user->profile_image_url_https;
-	$thumb = $responseBody->extended_entities->media[0]->media_url_https;
 
-	$videosArray = $responseBody->extended_entities->media[0]->video_info->variants;
+	return $responseBody;
+}
+
+function gussyTweet($tweetID) {
+	$tweet = getTweet($tweetID);
+	$date = $tweet->created_at;
+	$sourcePic = $tweet->user->profile_image_url_https;
+	$thumb = $tweet->extended_entities->media[0]->media_url_https;
+
+	$videosArray = $tweet->extended_entities->media[0]->video_info->variants;
 	$biggestVideoKey = array_keys($videosArray, max($videosArray))[0];
 	$vodlink = $videosArray[$biggestVideoKey]->url;
 	if (!$vodlink) {$vodlink = "none";}
@@ -186,6 +197,40 @@ function gussyGfy($gfyCode) {
 	} else {
 		return false;
 	}
+}
+
+function submitTweet($tweetData) {
+	$tweeter = $tweetData->user->screen_name;
+	if ($tweetData->text) {
+		$fullTweet = sanitize_text_field($tweetData->text);
+	} elseif ($tweetData->full_text) {
+		$fullTweet = sanitize_text_field($tweetData->full_text);
+	}
+	$tweetWords = explode(" ", $fullTweet);
+	$tweet = "";
+	foreach ($tweetWords as $key => $word) {
+		if (strpos($word, "@") === false && strpos($word, "http") === false) {
+			$tweet .= " " . $word . " ";
+		}
+	}
+	if ($tweet === "") {
+		$tweet = $tweeter . " Twitter Mention";
+	}
+	$tweetID = $tweetData->id_str;
+	if ($tweetData->entities->media) {
+		$submissionURL = "https://twitter.com/" . $tweeter . "/status/" . $tweetID;
+	} elseif ($tweetData->entities->urls) {
+		foreach ($tweetData->entities->urls as $urlArray) {
+			if (strpos($urlArray->expanded_url, "clips.twitch.tv") || strpos($urlArray->expanded_url, "gfycat.com") || strpos($urlArray->expanded_url, "youtube.com") ||strpos($urlArray->expanded_url, "youtu.be")) {
+				$submissionURL = $urlArray->expanded_url;
+			}
+		}
+	}
+	// basicPrint($tweeter);
+	// basicPrint($tweet);
+	// basicPrint($submissionURL);
+	$submission = submitClip($tweet, $submissionURL, $tweeter);
+	return $submission;
 }
 
 add_action( 'wp_ajax_addProspect', 'addProspect' );

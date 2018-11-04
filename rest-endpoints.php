@@ -128,7 +128,7 @@ function get_clip_comments_for_rest($data) {
 		} else {
 			$comments[$key]['commenter'] = $commenter['dailiesDisplayName'];
 		}
-		$comments[$key]['pic'] = getPicByUser($commenter);
+		$comments[$key]['pic'] = getPicForPerson($commenter);
 	}
 	return $comments;
 }

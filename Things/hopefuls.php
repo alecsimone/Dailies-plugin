@@ -61,4 +61,12 @@ function keepSlug() {
 	killAjaxFunction("Post added for " . $slugData['slug']);
 }
 
+add_action( 'wp_ajax_hopefuls_cutter', 'hopefuls_cutter' );
+function hopefuls_cutter() {
+	$slugToNuke = $_POST['slug'];
+	nukeSlug($slugToNuke);
+	reset_chat_votes();
+	killAjaxFunction($slugToNuke);
+}
+
 ?>
