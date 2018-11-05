@@ -14,7 +14,6 @@ function client_information() {
 function generateWeedData() {
 	$weedDataArray = array();
 	$weedDataArray['streamList'] = generateTodaysStreamlist();
-	
 	$lastUpdateTime = get_option("lastClipUpdateTime");
 	if (!$lastUpdateTime) {
 		$weedPageID = getPageIDBySlug('weed');

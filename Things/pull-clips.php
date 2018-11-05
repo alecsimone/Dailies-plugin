@@ -147,13 +147,17 @@ function pull_twitter_mentions() {
 	$response = wp_remote_get($url, $args);
 	$responseBody = json_decode($response['body']);
 
+	$cutoffTimestamp = clipCutoffTimestamp();
 	foreach ($responseBody as $key => $tweetData) {
-	// basicPrint($key);
+		// basicPrint($key);
+		$tweetTimestamp = date(U, strtotime($tweetData->created_at));
+		if ($tweetTimestamp < $cutoffTimestamp) {continue;}
 		$tweetURL = "https://twitter.com/" . $tweetData->user->screen_name . "/status/" . $tweetData->id_str;
-	// basicPrint($tweetURL);
 		if ($tweetData->in_reply_to_status_id_str) {
 			$parentTweet = getTweet($tweetData->in_reply_to_status_id_str);
 			if ($parentTweet->user->screen_name === "Rocket_Dailies") {continue;}
+			$parentTweetTimestamp = date(U, strtotime($parentTweet->created_at));
+			if ($parentTweetTimestamp < $cutoffTimestamp) {continue;}
 			if ( tweetIsProbablySubmission($parentTweet) ) {
 				$submission = submitTweet($parentTweet);
 			}
@@ -165,6 +169,8 @@ function pull_twitter_mentions() {
 					$linkedTweetID = turnURLIntoTwitterCode($urlArray->expanded_url);
 					$linkedTweet = getTweet($linkedTweetID);
 					if ($linkedTweet->user->screen_name === "Rocket_Dailies") {continue;}
+					$linkedTweetTimestamp = date(U, strtotime($linkedTweet->created_at));
+			if ($linkedTweetTimestamp < $cutoffTimestamp) {continue;}
 					if ( tweetIsProbablySubmission($linkedTweet) ) {
 						$submission = submitTweet($linkedTweet);
 					}
