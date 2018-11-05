@@ -245,4 +245,35 @@ function createTwitterOauthSignature($url, $OAuth, $method) {
 	return $signature;
 }
 
+function addSlugToDB($slugData) {
+	global $wpdb;
+	$table_name = $wpdb->prefix . "pulled_clips_db";
+	
+	$clipArray = array(
+		'slug' => $slugData['slug'],
+		'title' => $slugData['title'] ? remove_emoji($slugData['title']) : "No Title",
+		'views' => $slugData['views'] ? $slugData['views'] : 0,
+		'age' => $slugData['age'] ? $slugData['age'] : 0,
+		'source' => $slugData['source'] ? $slugData['source'] : 'unknown',
+		'sourcepic' => $slugData['sourcepic'] ? $slugData['sourcepic'] : 'unknown',
+		'vodlink' => $slugData['vodlink'] ? $slugData['vodlink'] : 'none',
+		'thumb' => $slugData['thumb'],
+		'clipper' => $slugData['clipper'] ? $slugData['clipper'] : 'unknown',
+		'votecount' => $slugData['votecount'] ? $slugData['votecount'] : 0,
+		'score' => $slugData['score'] ? $slugData['score'] : 0,
+		'nuked' => $slugData['nuked'] ? $slugData['nuked'] : 0,
+		'type' => $slugData['type'],
+	);
+
+	$insertionSuccess = $wpdb->insert(
+		$table_name,
+		$clipArray
+	);
+	if ($insertionSuccess) {
+		return $insertionSuccess;
+	} else {
+		return $wpdb->last_error;
+	}
+}
+
 ?>

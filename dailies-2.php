@@ -27,6 +27,7 @@ require_once( __DIR__ . '/Things/live.php');
 
 //Voting
 require_once( __DIR__ . '/Voting/vote-databases-setup.php');
+require_once( __DIR__ . '/Voting/populate-vote-db.php');
 require_once( __DIR__ . '/Voting/voting.php');
 
 //Rules

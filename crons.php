@@ -11,6 +11,11 @@ function add_custom_cron_schedules($schedules) {
 		'display' => __("Every Minute"),
 	);
 
+	$schedules['tenMinutes'] = array(
+		'interval' => 600,
+		'display' => __("Every Minute"),
+	);
+
 	return $schedules;
 }
 add_filter( 'cron_schedules', 'add_custom_cron_schedules' );
@@ -22,6 +27,15 @@ if( !wp_next_scheduled( 'pull_clips' ) ) {
 add_action( 'pull_clips', 'pull_clips_cron_handler' );
 function pull_clips_cron_handler() {
 	pull_all_clips();
+}
+
+if( !wp_next_scheduled( 'populate_vote_db' ) ) {
+   wp_schedule_event( time(), 'twiceHourly', 'populate_vote_db' );
+}
+
+add_action( 'populate_vote_db', 'populate_vote_db_handler' );
+function populate_vote_db_handler() {
+	populate_vote_db();
 }
 
 if( !wp_next_scheduled( 'clean_pulled_clips_db' ) ) {
