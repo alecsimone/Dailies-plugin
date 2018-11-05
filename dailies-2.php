@@ -23,6 +23,7 @@ require_once( __DIR__ . '/Things/comments.php');
 require_once( __DIR__ . '/Things/submissions.php');
 require_once( __DIR__ . '/Things/pull-clips.php');
 require_once( __DIR__ . '/Things/hopefuls.php');
+require_once( __DIR__ . '/Things/live.php');
 
 //Voting
 require_once( __DIR__ . '/Voting/vote-databases-setup.php');

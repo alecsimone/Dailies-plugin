@@ -28,6 +28,7 @@ function keepSlug() {
 		'tax_input' => array(
 			'source' => $postSource,
 			'stars' => $postStar,
+			'category' => 1125,
 		),
 		'meta_input' => array(
 			'voteledger' => $voteledger,
