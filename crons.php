@@ -30,7 +30,7 @@ function pull_clips_cron_handler() {
 }
 
 if( !wp_next_scheduled( 'populate_vote_db' ) ) {
-   wp_schedule_event( time(), 'twiceHourly', 'populate_vote_db' );
+   wp_schedule_event( time(), 'tenMinutes', 'populate_vote_db' );
 }
 
 add_action( 'populate_vote_db', 'populate_vote_db_handler' );

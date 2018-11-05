@@ -13,10 +13,12 @@ function populate_vote_db() {
 	);
 
 	$posts = get_posts($args);
-	foreach ($posts as $key => $post) {
-		addPostVotesToNewDB($post->ID);
+	if (is_array($posts)) {
+		foreach ($posts as $key => $post) {
+			addPostVotesToNewDB($post->ID);
+		}
+		update_option("votePopulationOffset", $votePopulationOffset + $numberposts);
 	}
-	update_option("votePopulationOffset", $votePopulationOffset + $numberposts);
 }
 
 function addPostVotesToNewDB($postID) {
