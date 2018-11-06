@@ -13,7 +13,7 @@ function add_custom_cron_schedules($schedules) {
 
 	$schedules['tenMinutes'] = array(
 		'interval' => 600,
-		'display' => __("Every Minute"),
+		'display' => __("Every Ten Minutes"),
 	);
 
 	return $schedules;
